@@ -3,9 +3,9 @@ Database Connection Handler
 Manages MySQL connections using connection pooling
 """
 
-import mysql.connector
-from mysql.connector import pooling, Error
-from config.database import DB_CONFIG, POOL_CONFIG
+import pymysql
+from pymysql import Error
+from config.database import DB_CONFIG
 import logging
 
 # Setup logging
@@ -15,44 +15,30 @@ logger = logging.getLogger(__name__)
 
 class DatabaseConnection:
     """
-    Singleton class to manage database connection pool
+    Database connection handler using PyMySQL
     """
-    _connection_pool = None
-
-    @classmethod
-    def get_pool(cls):
-        """
-        Get or create connection pool
-        
-        Returns:
-            ConnectionPool: MySQL connection pool
-        """
-        if cls._connection_pool is None:
-            try:
-                cls._connection_pool = pooling.MySQLConnectionPool(
-                    pool_name=POOL_CONFIG['pool_name'],
-                    pool_size=POOL_CONFIG['pool_size'],
-                    pool_reset_session=POOL_CONFIG['pool_reset_session'],
-                    **DB_CONFIG
-                )
-                logger.info("✅ Database connection pool created successfully")
-            except Error as e:
-                logger.error(f"❌ Error creating connection pool: {e}")
-                raise
-        
-        return cls._connection_pool
+    _connection = None
 
     @classmethod
     def get_connection(cls):
         """
-        Get a connection from the pool
+        Get a database connection
         
         Returns:
-            MySQLConnection: Database connection
+            Connection: Database connection
         """
         try:
-            pool = cls.get_pool()
-            connection = pool.get_connection()
+            # Create fresh connection each time to avoid schema caching
+            connection = pymysql.connect(
+                host=DB_CONFIG['host'],
+                user=DB_CONFIG['user'],
+                password=DB_CONFIG['password'],
+                database=DB_CONFIG['database'],
+                port=DB_CONFIG['port'],
+                charset=DB_CONFIG['charset'],
+                autocommit=True,
+                cursorclass=pymysql.cursors.DictCursor
+            )
             return connection
         except Error as e:
             logger.error(f"❌ Error getting connection: {e}")
@@ -61,12 +47,12 @@ class DatabaseConnection:
     @classmethod
     def close_connection(cls, connection):
         """
-        Return connection to pool
+        Close connection
         
         Args:
             connection: MySQL connection to close
         """
-        if connection and connection.is_connected():
+        if connection and connection.open:
             connection.close()
 
 
@@ -88,7 +74,7 @@ class Database:
             tuple: (connection, cursor)
         """
         self.connection = DatabaseConnection.get_connection()
-        self.cursor = self.connection.cursor(dictionary=True)
+        self.cursor = self.connection.cursor()
         return self.connection, self.cursor
 
     def __exit__(self, exc_type, exc_val, exc_tb):

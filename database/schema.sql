@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS Price (
     price_id INT AUTO_INCREMENT PRIMARY KEY,
     crypto_id INT NOT NULL,
     datetime TIMESTAMP NOT NULL,
-    price DECIMAL(20, 2) NOT NULL,
+    price DECIMAL(30, 10) NOT NULL,
     volume DECIMAL(30, 2),
     market_cap DECIMAL(30, 2),
     source VARCHAR(50),

@@ -3,6 +3,7 @@ customtkinter==5.2.2
 
 # Database
 mysql-connector-python==9.1.0
+PyMySQL==1.1.0
 
 # API and HTTP Requests
 requests==2.32.3

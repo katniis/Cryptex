@@ -18,7 +18,8 @@ DB_CONFIG = {
     'port': int(os.getenv('DB_PORT', 3306)),
     'charset': 'utf8mb4',
     'autocommit': True,
-    'raise_on_warnings': True
+    'raise_on_warnings': True,
+    'use_pure': True,  # Force pure Python implementation
 }
 
 # Connection Pool Settings
