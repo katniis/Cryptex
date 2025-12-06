@@ -1,6 +1,6 @@
 -- Crypto Portfolio Tracker Database Schema
 -- Drop database if exists (USE WITH CAUTION!)
--- DROP DATABASE IF EXISTS crypto_portfolio_tracker;
+-- DROP DATABASE IF EXISTS Cryptex;
 
 -- Create database
 CREATE DATABASE IF NOT EXISTS cryptex;

@@ -1,13 +1,12 @@
 """
 Main Application Controller
-Manages the flow between login, register, and main windows
+Manages the flow between auth and main windows
 """
 
 import customtkinter as ctk
-from ui.windows.login_window import LoginWindow
-from ui.windows.register_window import RegisterWindow
+from ui.windows.auth_window import AuthWindow
 from ui.windows.main_window import MainWindow
-from models.user import User
+from services.price_update_service import get_price_service
 
 
 class CryptexApp:
@@ -19,6 +18,7 @@ class CryptexApp:
         self.root = None
         self.main_window = None
         self.current_user = None
+        self.price_service = get_price_service()
         
     def start(self):
         """Start the application"""
@@ -30,40 +30,21 @@ class CryptexApp:
         self.root = ctk.CTk()
         self.root.withdraw()  # Hide main window
         
-        # If no users exist in the database, force registration first.
-        try:
-            users = User.get_all()
-        except Exception:
-            users = None
-
-        if not users:
-            # No users — require registration before login
-            self.show_register()
-        else:
-            # Users exist — proceed to login as normal
-            self.show_login()
+        # Show auth window
+        self.show_auth()
         
         # Start main loop
         self.root.mainloop()
     
-    def show_login(self):
-        """Show login window"""
-        LoginWindow(
+    def show_auth(self):
+        """Show authentication window"""
+        AuthWindow(
             self.root,
-            on_login_success=self.on_login_success,
-            on_register_click=self.show_register
+            on_auth_success=self.on_auth_success
         )
     
-    def show_register(self):
-        """Show registration window"""
-        RegisterWindow(
-            self.root,
-            on_register_success=self.on_register_success,
-            on_login_click=self.show_login
-        )
-    
-    def on_login_success(self, user):
-        """Handle successful login"""
+    def on_auth_success(self, user):
+        """Handle successful authentication"""
         self.current_user = user
         self.root.destroy()  # Destroy hidden root
         
@@ -75,14 +56,13 @@ class CryptexApp:
         
         self.main_window.mainloop()
     
-    def on_register_success(self, user):
-        """Handle successful registration"""
-        # Same as login success
-        self.on_login_success(user)
-    
     def on_main_window_close(self):
         """Handle main window close"""
         if self.main_window:
+            # Stop price service
+            self.price_service.stop()
+            
+            # Close window
             self.main_window.quit()
 
 

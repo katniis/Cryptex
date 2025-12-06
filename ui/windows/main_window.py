@@ -8,6 +8,7 @@ from ui.styles.colors import COLORS
 from ui.styles.fonts import FONTS
 from models.portfolio import Portfolio
 from models.user import User
+from services.price_update_service import get_price_service
 
 
 class MainWindow(ctk.CTk):
@@ -21,6 +22,7 @@ class MainWindow(ctk.CTk):
         self.user = user
         self.current_portfolio = None
         self.portfolios = []
+        self.price_service = get_price_service()
         
         # Window settings
         self.title("Cryptex - Portfolio Tracker")
@@ -36,6 +38,12 @@ class MainWindow(ctk.CTk):
         
         self.setup_ui()
         self.load_portfolios()
+        
+        # Start price updates
+        self.start_price_updates()
+        
+        # Handle window close
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
     def setup_ui(self):
         """Setup main UI structure"""
@@ -162,6 +170,15 @@ class MainWindow(ctk.CTk):
         )
         self.portfolio_name_label.grid(row=0, column=0, padx=30, pady=20, sticky="w")
         
+        # Price update indicator
+        self.update_indicator = ctk.CTkLabel(
+            top_bar,
+            text="🔄 Live Prices",
+            font=FONTS['body_small'],
+            text_color=COLORS['success']
+        )
+        self.update_indicator.grid(row=0, column=1, padx=20, pady=20)
+        
         # Portfolio value
         self.portfolio_value_label = ctk.CTkLabel(
             top_bar,
@@ -169,7 +186,7 @@ class MainWindow(ctk.CTk):
             font=FONTS['heading'],
             text_color=COLORS['success']
         )
-        self.portfolio_value_label.grid(row=0, column=1, padx=30, pady=20, sticky="e")
+        self.portfolio_value_label.grid(row=0, column=2, padx=30, pady=20, sticky="e")
     
     def load_portfolios(self):
         """Load user's portfolios"""
@@ -238,6 +255,12 @@ class MainWindow(ctk.CTk):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
         
+        # Import frames
+        from ui.frames.overview_frame import OverviewFrame
+        from ui.frames.transaction_frame import TransactionFrame
+        from ui.frames.watchlist_frame import WatchlistFrame
+        from ui.frames.alerts_frame import AlertsFrame
+        
         # Create tabview
         tabview = ctk.CTkTabview(
             self.content_frame,
@@ -251,37 +274,36 @@ class MainWindow(ctk.CTk):
         tab_watchlist = tabview.add("Watchlist")
         tab_alerts = tabview.add("Alerts")
         
-        # Overview tab content
-        overview_label = ctk.CTkLabel(
+        # Overview tab
+        self.overview_frame = OverviewFrame(
             tab_overview,
-            text="Overview Tab - Coming Soon",
-            font=FONTS['heading']
+            self.current_portfolio,
+            on_add_transaction=self.show_add_transaction_dialog
         )
-        overview_label.pack(pady=50)
+        self.overview_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
-        # Transactions tab content
-        trans_label = ctk.CTkLabel(
+        # Transactions tab
+        self.transaction_frame = TransactionFrame(
             tab_transactions,
-            text="Transactions Tab - Coming Soon",
-            font=FONTS['heading']
+            self.current_portfolio,
+            on_add_transaction=self.show_add_transaction_dialog,
+            on_edit_transaction=None
         )
-        trans_label.pack(pady=50)
+        self.transaction_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
         # Watchlist tab
-        watch_label = ctk.CTkLabel(
+        self.watchlist_frame = WatchlistFrame(
             tab_watchlist,
-            text="Watchlist Tab - Coming Soon",
-            font=FONTS['heading']
+            self.user
         )
-        watch_label.pack(pady=50)
+        self.watchlist_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
         # Alerts tab
-        alert_label = ctk.CTkLabel(
+        self.alerts_frame = AlertsFrame(
             tab_alerts,
-            text="Alerts Tab - Coming Soon",
-            font=FONTS['heading']
+            self.user
         )
-        alert_label.pack(pady=50)
+        self.alerts_frame.pack(fill="both", expand=True, padx=20, pady=20)
     
     def show_welcome_message(self):
         """Show welcome message when no portfolio selected"""
@@ -339,8 +361,62 @@ class MainWindow(ctk.CTk):
                 self.update_portfolio_list()
                 self.select_portfolio(portfolio)
     
+    def show_add_transaction_dialog(self):
+        """Show add transaction dialog"""
+        from ui.components.dialogs import AddTransactionDialog
+        
+        dialog = AddTransactionDialog(
+            self,
+            self.user,
+            self.current_portfolio,
+            on_success=self.on_transaction_added
+        )
+    
+    def on_transaction_added(self):
+        """Handle transaction added successfully"""
+        # Refresh the current view
+        if hasattr(self, 'overview_frame'):
+            self.overview_frame.refresh()
+        if hasattr(self, 'transaction_frame'):
+            self.transaction_frame.refresh()
+        
+        # Update portfolio value in top bar
+        total_value = self.current_portfolio.get_total_value()
+        self.portfolio_value_label.configure(text=f"${total_value:,.2f}")
+    
     def handle_logout(self):
         """Handle logout"""
+        self.on_closing()
+    
+    def start_price_updates(self):
+        """Start automatic price updates"""
+        # Register callback for UI updates
+        self.price_service.add_update_callback(self.on_prices_updated)
+        
+        # Start the service (updates every 5 seconds)
+        self.price_service.start(update_interval=5)
+    
+    def on_prices_updated(self):
+        """Called when prices are updated"""
+        # Refresh all frames if they exist
+        if hasattr(self, 'overview_frame'):
+            self.overview_frame.refresh()
+        if hasattr(self, 'watchlist_frame'):
+            self.watchlist_frame.refresh()
+        if hasattr(self, 'alerts_frame'):
+            self.alerts_frame.refresh()
+        
+        # Update portfolio value in top bar
+        if self.current_portfolio:
+            total_value = self.current_portfolio.get_total_value()
+            self.portfolio_value_label.configure(text=f"${total_value:,.2f}")
+    
+    def on_closing(self):
+        """Handle window close"""
+        # Stop price updates
+        self.price_service.stop()
+        
+        # Destroy window
         self.destroy()
 
 
