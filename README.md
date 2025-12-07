@@ -1,19 +1,16 @@
 # CRYPTEX
 
-Empowering Your Digital Wealth with Precision and Confidence
-
-![Status](https://img.shields.io/badge/last%20commit-today-brightgreen)
-![Python](https://img.shields.io/badge/python-100%25-blue)
-![Languages](https://img.shields.io/badge/languages-1-lightgrey)
+## Empowering Your Digital Wealth with Precision and Confidence
 
 Built with the tools and technologies:
 
-- Markdown  
-- NumPy  
-- Pytest  
-- Python  
-- Pandas  
-- MySQL
+![Markdown](https://img.shields.io/badge/Markdown-000000?logo=markdown&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-013243?logo=numpy&logoColor=white)
+![Pytest](https://img.shields.io/badge/Pytest-0A9EDC?logo=pytest&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?logo=pandas&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
+
 
 ---
 
