@@ -1,8 +1,10 @@
 <p align = "center">
 # CRYPTEX
+</p>
 
-## Empowering Your Digital Wealth with Precision and Confidence
+<h1 align="center"> Empowering Your Digital Wealth with Precision and Confidence
 
+<p align = "center">
 Built with the tools and technologies:
 
 ![Markdown](https://img.shields.io/badge/Markdown-000000?logo=markdown&logoColor=white)
@@ -11,8 +13,8 @@ Built with the tools and technologies:
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![Pandas](https://img.shields.io/badge/Pandas-150458?logo=pandas&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
-
 </p>
+
 ---
 
 ## Table of Contents
