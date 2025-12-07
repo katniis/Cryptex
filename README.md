@@ -78,19 +78,10 @@ Build Cryptex from source and install dependencies:
 Run the project with:
 
 ```bash
-python {entrypoint}
+python main.py
 ```
 
 ---
-
-## Testing
-
-Cryptex uses the **{test_framework}** test framework.  
-Run the test suite with:
-
-```bash
-pytest
-```
 
 ---
 
