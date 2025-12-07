@@ -13,6 +13,7 @@ Built with the tools and technologies:
 - Pytest  
 - Python  
 - Pandas  
+- MySQL
 
 ---
 
