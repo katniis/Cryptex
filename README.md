@@ -1,8 +1,7 @@
-<p align = "center">
-# CRYPTEX
-</p>
+<h1 align="center">CRYPTEX
 
-<h1 align="center"> Empowering Your Digital Wealth with Precision and Confidence
+
+<h2 align="center"> Empowering Your Digital Wealth with Precision and Confidence
 
 <p align = "center">
 Built with the tools and technologies:
