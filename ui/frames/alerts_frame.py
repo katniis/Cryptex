@@ -148,10 +148,10 @@ class AlertsFrame(ctk.CTkFrame):
             text_color=COLORS['text_primary'],
             anchor="w"
         )
-        asset_label.place(relx=0, rely=0.5, anchor="w", relwidth=0.20)
+        asset_label.place(relx=0.10, rely=0.5, anchor="w", relwidth=0.20)
         
         # Condition
-        condition_text = f"Price {alert['condition']}"
+        condition_text = f"Price {alert['alert_condition']}"
         condition_label = ctk.CTkLabel(
             row_frame,
             text=condition_text,
@@ -183,7 +183,7 @@ class AlertsFrame(ctk.CTkFrame):
         is_active = alert['is_active']
         is_triggered = False
         if current_price and is_active:
-            if alert['condition'] == 'above':
+            if alert['alert_condition'] == 'above':
                 is_triggered = current_price >= alert['target_price']
             else:
                 is_triggered = current_price <= alert['target_price']
@@ -359,7 +359,7 @@ class AlertsFrame(ctk.CTkFrame):
         )
         create_btn.pack(side="right", expand=True, fill="x")
     
-    def create_alert(self, selection, cryptos, condition, target_price, dialog):
+    def create_alert(self, selection, cryptos, alert_condition, target_price, dialog):
         """Create new alert"""
         if selection == "Select cryptocurrency":
             return
@@ -376,7 +376,7 @@ class AlertsFrame(ctk.CTkFrame):
             Alert.create(
                 user_id=self.user.user_id,
                 crypto_id=crypto.crypto_id,
-                condition=condition,
+                alert_condition=alert_condition,
                 target_price=target
             )
             dialog.destroy()

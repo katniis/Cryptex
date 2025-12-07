@@ -149,7 +149,7 @@ class WatchlistFrame(ctk.CTkFrame):
             text_color=COLORS['text_primary'],
             anchor="w"
         )
-        name_label.place(relx=0, rely=0.5, anchor="w", relwidth=0.25)
+        name_label.place(relx=0.10, rely=0.5, anchor="w", relwidth=0.25)
         
         # Symbol
         symbol_label = ctk.CTkLabel(

@@ -102,14 +102,15 @@ class TransactionFrame(ctk.CTkFrame):
         header_frame.pack(fill="x", pady=(0, 5))
         
         headers = [
-            ("Type", 0.10),
-            ("Date", 0.15),
-            ("Asset", 0.15),
-            ("Quantity", 0.12),
-            ("Price", 0.12),
-            ("Fee", 0.10),
-            ("Total", 0.12),
-            ("Exchange", 0.14)
+            ("Type", 0.08),
+            ("Date", 0.12),
+            ("Asset", 0.12),
+            ("Quantity", 0.10),
+            ("Price", 0.10),
+            ("Fee", 0.08),
+            ("Total", 0.10),
+            ("Exchange", 0.12),
+            ("Actions", 0.18)
         ]
         
         for text, relwidth in headers:
@@ -183,14 +184,14 @@ class TransactionFrame(ctk.CTkFrame):
         type_label.place(relx=0.02, rely=0.5, anchor="w")
         
         # Date
-        date_str = tx['timestamp'].strftime("%b %d, %Y") if tx['timestamp'] else "N/A"
+        date_str = tx['timestamp'].strftime("%b %d, %Y\n%H:%M") if tx['timestamp'] else "N/A"
         date_label = ctk.CTkLabel(
             row_frame,
             text=date_str,
             font=FONTS['body_small'],
             text_color=COLORS['text_secondary']
         )
-        date_label.place(relx=0.10, rely=0.5, anchor="w", relwidth=0.15)
+        date_label.place(relx=0.08, rely=0.5, anchor="w", relwidth=0.12)
         
         # Asset
         asset_label = ctk.CTkLabel(
@@ -199,7 +200,7 @@ class TransactionFrame(ctk.CTkFrame):
             font=FONTS['body'],
             text_color=COLORS['text_primary']
         )
-        asset_label.place(relx=0.25, rely=0.5, anchor="w", relwidth=0.15)
+        asset_label.place(relx=0.20, rely=0.5, anchor="w", relwidth=0.12)
         
         # Quantity
         qty_label = ctk.CTkLabel(
@@ -208,7 +209,7 @@ class TransactionFrame(ctk.CTkFrame):
             font=FONTS['body'],
             text_color=COLORS['text_secondary']
         )
-        qty_label.place(relx=0.40, rely=0.5, anchor="w", relwidth=0.12)
+        qty_label.place(relx=0.32, rely=0.5, anchor="w", relwidth=0.10)
         
         # Price per unit
         price_label = ctk.CTkLabel(
@@ -217,7 +218,7 @@ class TransactionFrame(ctk.CTkFrame):
             font=FONTS['body'],
             text_color=COLORS['text_secondary']
         )
-        price_label.place(relx=0.52, rely=0.5, anchor="w", relwidth=0.12)
+        price_label.place(relx=0.42, rely=0.5, anchor="w", relwidth=0.10)
         
         # Fee
         fee_label = ctk.CTkLabel(
@@ -226,7 +227,7 @@ class TransactionFrame(ctk.CTkFrame):
             font=FONTS['body_small'],
             text_color=COLORS['text_tertiary']
         )
-        fee_label.place(relx=0.64, rely=0.5, anchor="w", relwidth=0.10)
+        fee_label.place(relx=0.52, rely=0.5, anchor="w", relwidth=0.08)
         
         # Total
         total = tx['quantity'] * tx['price_per_unit']
@@ -236,7 +237,7 @@ class TransactionFrame(ctk.CTkFrame):
             font=FONTS['body'],
             text_color=COLORS['text_primary']
         )
-        total_label.place(relx=0.74, rely=0.5, anchor="w", relwidth=0.12)
+        total_label.place(relx=0.60, rely=0.5, anchor="w", relwidth=0.10)
         
         # Exchange
         exchange_text = tx['exchange'] if tx.get('exchange') else "N/A"
@@ -246,7 +247,44 @@ class TransactionFrame(ctk.CTkFrame):
             font=FONTS['body_small'],
             text_color=COLORS['text_tertiary']
         )
-        exchange_label.place(relx=0.86, rely=0.5, anchor="w", relwidth=0.14)
+        exchange_label.place(relx=0.70, rely=0.5, anchor="w", relwidth=0.12)
+        
+        # Actions
+        actions_frame = ctk.CTkFrame(row_frame, fg_color="transparent")
+        actions_frame.place(relx=0.82, rely=0.5, anchor="w", relwidth=0.18)
+        
+        # Delete button
+        delete_btn = ctk.CTkButton(
+            actions_frame,
+            text="Delete",
+            command=lambda: self.delete_transaction(tx['transaction_id']),
+            width=70,
+            height=30,
+            fg_color=COLORS['danger'],
+            hover_color=COLORS['danger_bg'],
+            font=FONTS['body_small']
+        )
+        delete_btn.pack(side="left", padx=5)
+    
+    def delete_transaction(self, transaction_id):
+        """Delete a transaction"""
+        # Confirmation dialog
+        dialog = ctk.CTkInputDialog(
+            text="Type 'DELETE' to confirm deletion:",
+            title="Confirm Delete"
+        )
+        confirmation = dialog.get_input()
+        
+        if confirmation == "DELETE":
+            from models.transaction import Transaction
+            tx = Transaction.get_by_id(transaction_id)
+            if tx:
+                tx.delete()
+                self.refresh()
+                
+                # Notify parent to refresh
+                if hasattr(self.master.master.master.master, 'on_transaction_added'):
+                    self.master.master.master.master.on_transaction_added()
     
     def apply_filters(self, value):
         """Apply filter based on selected type"""

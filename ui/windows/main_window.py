@@ -159,7 +159,7 @@ class MainWindow(ctk.CTk):
             corner_radius=0
         )
         top_bar.grid(row=0, column=0, sticky="ew")
-        top_bar.grid_columnconfigure(1, weight=1)
+        top_bar.grid_columnconfigure(2, weight=1)
         
         # Portfolio name
         self.portfolio_name_label = ctk.CTkLabel(
@@ -170,6 +170,19 @@ class MainWindow(ctk.CTk):
         )
         self.portfolio_name_label.grid(row=0, column=0, padx=30, pady=20, sticky="w")
         
+        # Export button
+        self.export_btn = ctk.CTkButton(
+            top_bar,
+            text="📤 Export",
+            command=self.export_portfolio_data,
+            width=100,
+            height=35,
+            fg_color=COLORS['bg_tertiary'],
+            hover_color=COLORS['border'],
+            font=FONTS['body']
+        )
+        self.export_btn.grid(row=0, column=1, padx=10, pady=20)
+        
         # Price update indicator
         self.update_indicator = ctk.CTkLabel(
             top_bar,
@@ -177,7 +190,7 @@ class MainWindow(ctk.CTk):
             font=FONTS['body_small'],
             text_color=COLORS['success']
         )
-        self.update_indicator.grid(row=0, column=1, padx=20, pady=20)
+        self.update_indicator.grid(row=0, column=2, padx=20, pady=20)
         
         # Portfolio value
         self.portfolio_value_label = ctk.CTkLabel(
@@ -186,7 +199,7 @@ class MainWindow(ctk.CTk):
             font=FONTS['heading'],
             text_color=COLORS['success']
         )
-        self.portfolio_value_label.grid(row=0, column=2, padx=30, pady=20, sticky="e")
+        self.portfolio_value_label.grid(row=0, column=3, padx=30, pady=20, sticky="e")
     
     def load_portfolios(self):
         """Load user's portfolios"""
@@ -418,6 +431,115 @@ class MainWindow(ctk.CTk):
         
         # Destroy window
         self.destroy()
+    
+    def export_portfolio_data(self):
+        """Export portfolio data to CSV"""
+        if not self.current_portfolio:
+            return
+        
+        import csv
+        from datetime import datetime
+        from models.transaction import Transaction
+        from models.portfolio_holding import PortfolioHolding
+        
+        # Get transactions
+        transactions = Transaction.get_by_portfolio(self.current_portfolio.portfolio_id)
+        
+        if not transactions:
+            # Show message
+            dialog = ctk.CTkToplevel(self)
+            dialog.title("Export")
+            dialog.geometry("300x150")
+            dialog.transient(self)
+            dialog.grab_set()
+            
+            label = ctk.CTkLabel(
+                dialog,
+                text="No transactions to export",
+                font=FONTS['body']
+            )
+            label.pack(pady=50)
+            return
+        
+        # Create filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{self.current_portfolio.portfolio_name}_{timestamp}.csv"
+        
+        # Write CSV
+        try:
+            with open(filename, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                
+                # Header
+                writer.writerow([
+                    'Date', 'Time', 'Type', 'Asset', 'Symbol', 
+                    'Quantity', 'Price Per Unit', 'Fee', 'Total', 'Exchange', 'Notes'
+                ])
+                
+                # Data rows
+                for tx in transactions:
+                    date_str = tx['timestamp'].strftime("%Y-%m-%d") if tx['timestamp'] else ""
+                    time_str = tx['timestamp'].strftime("%H:%M:%S") if tx['timestamp'] else ""
+                    total = tx['quantity'] * tx['price_per_unit']
+                    
+                    writer.writerow([
+                        date_str,
+                        time_str,
+                        tx['type'].upper(),
+                        tx['name'],
+                        tx['symbol'],
+                        tx['quantity'],
+                        tx['price_per_unit'],
+                        tx.get('fee', 0),
+                        total,
+                        tx.get('exchange', ''),
+                        tx.get('notes', '')
+                    ])
+            
+            # Success message
+            dialog = ctk.CTkToplevel(self)
+            dialog.title("Export Successful")
+            dialog.geometry("350x150")
+            dialog.transient(self)
+            dialog.grab_set()
+            
+            # Center dialog
+            dialog.update_idletasks()
+            x = (dialog.winfo_screenwidth() // 2) - (350 // 2)
+            y = (dialog.winfo_screenheight() // 2) - (150 // 2)
+            dialog.geometry(f'350x150+{x}+{y}')
+            
+            label = ctk.CTkLabel(
+                dialog,
+                text=f"✅ Exported to:\n{filename}",
+                font=FONTS['body']
+            )
+            label.pack(pady=30)
+            
+            ok_btn = ctk.CTkButton(
+                dialog,
+                text="OK",
+                command=dialog.destroy,
+                fg_color=COLORS['accent_primary'],
+                hover_color=COLORS['accent_hover']
+            )
+            ok_btn.pack(pady=10)
+            
+        except Exception as e:
+            # Error message
+            dialog = ctk.CTkToplevel(self)
+            dialog.title("Export Failed")
+            dialog.geometry("300x150")
+            dialog.transient(self)
+            dialog.grab_set()
+            
+            label = ctk.CTkLabel(
+                dialog,
+                text=f"❌ Export failed:\n{str(e)}",
+                font=FONTS['body'],
+                text_color=COLORS['danger']
+            )
+            label.pack(pady=50)
 
 
 if __name__ == "__main__":

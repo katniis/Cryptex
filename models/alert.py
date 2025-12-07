@@ -14,41 +14,41 @@ class Alert:
     """
     
     def __init__(self, alert_id=None, user_id=None, crypto_id=None, 
-                 condition=None, target_price=None, is_active=True, created_at=None):
+                 alert_condition=None, target_price=None, is_active=True, created_at=None):
         self.alert_id = alert_id
         self.user_id = user_id
         self.crypto_id = crypto_id
-        self.condition = condition  # 'above' or 'below'
+        self.alert_condition = alert_condition  # Changed from condition
         self.target_price = float(target_price) if target_price else 0.0
         self.is_active = is_active
         self.created_at = created_at
 
     @classmethod
-    def create(cls, user_id, crypto_id, condition, target_price):
+    def create(cls, user_id, crypto_id, alert_condition, target_price):
         """
         Create a new price alert
         
         Args:
             user_id (int): User ID
             crypto_id (int): Cryptocurrency ID
-            condition (str): 'above' or 'below'
+            alert_condition (str): 'above' or 'below'
             target_price (float): Target price in USD
             
         Returns:
             Alert: Alert object or None if failed
         """
         try:
-            if condition not in ['above', 'below']:
+            if alert_condition not in ['above', 'below']:
                 logger.error("Invalid condition. Must be 'above' or 'below'")
                 return None
             
             query = """
-                INSERT INTO Alert (user_id, crypto_id, condition, target_price)
+                INSERT INTO Alert (user_id, crypto_id, alert_condition, target_price)
                 VALUES (%s, %s, %s, %s)
             """
-            alert_id = execute_query(query, (user_id, crypto_id, condition, target_price))
+            alert_id = execute_query(query, (user_id, crypto_id, alert_condition, target_price))
             
-            logger.info(f"✅ Alert created: crypto {crypto_id} {condition} ${target_price}")
+            logger.info(f"✅ Alert created: crypto {crypto_id} {alert_condition} ${target_price}")
             return cls.get_by_id(alert_id)
             
         except Exception as e:
@@ -164,7 +164,7 @@ class Alert:
         Update alert
         
         Args:
-            **kwargs: Fields to update (condition, target_price, is_active)
+            **kwargs: Fields to update (alert_condition, target_price, is_active)
             
         Returns:
             bool: True if successful
@@ -173,11 +173,11 @@ class Alert:
             fields = []
             values = []
             
-            allowed_fields = ['condition', 'target_price', 'is_active']
+            allowed_fields = {'alert_condition': 'alert_condition', 'target_price': 'target_price', 'is_active': 'is_active'}
             
-            for field in allowed_fields:
+            for field, db_field in allowed_fields.items():
                 if field in kwargs:
-                    fields.append(f"{field} = %s")
+                    fields.append(f"{db_field} = %s")
                     values.append(kwargs[field])
             
             if not fields:
@@ -237,14 +237,13 @@ class Alert:
         if not self.is_active:
             return False
         
-        if self.condition == 'above':
+        if self.alert_condition == 'above':
             return current_price >= self.target_price
         else:  # below
             return current_price <= self.target_price
 
     def __repr__(self):
-        return f"<Alert(id={self.alert_id}, crypto={self.crypto_id}, {self.condition} ${self.target_price})>"
-
-
+        return f"<Alert(id={self.alert_id}, crypto={self.crypto_id}, {self.alert_condition} ${self.target_price})>"
+    
 if __name__ == "__main__":
     print("Alert models loaded.")
